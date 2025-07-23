@@ -59,9 +59,10 @@ jobs:
 
             - name: Run Packer Validate
               run: |
-                packer validate ./packer/app.pkr.hcl \
+                packer validate \
                   -var "environment=${{ needs.resolve-env.outputs.resolved_env }}" \
-                  -var "aws_region=${{ secrets.AWS_REGION }}"
+                  -var "aws_region=${{ secrets.AWS_REGION }}" \
+                  ./packer/app.pkr.hcl
 
 
             - name: Run Packer Build
