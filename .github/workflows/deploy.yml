@@ -7,9 +7,6 @@ on:
             - staging
     workflow_dispatch:
 
-env:
-    REGION: ${{ secrets.AWS_REGION }}
-
 jobs:
     resolve-env:
         runs-on: ubuntu-latest
@@ -30,10 +27,11 @@ jobs:
         uses: vinicius3516/terraform-bootstrap/.github/workflows/bootstrap.yml@main
         with:
             environment: ${{ needs.resolve-env.outputs.resolved_env }}
-            region: $REGION
+            region: ${{ secrets.AWS_REGION }}
         secrets:
             AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
             AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+            
 
     build-ami:
         runs-on: ubuntu-latest
