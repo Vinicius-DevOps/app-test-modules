@@ -1,10 +1,10 @@
 name: Provisioner and Deploy
 
 on:
-    push:
-        branches:
-            - main
-            - staging
+    # push:
+    #     branches:
+    #         - main
+    #         - staging
     workflow_dispatch:
 
 jobs:
@@ -21,18 +21,6 @@ jobs:
                 else
                     echo "environment=staging" >> $GITHUB_OUTPUT
                 fi
-
-    remote-backend:
-        if: github.event_name != 'workflow_dispatch'
-        needs: resolve-env
-        uses: vinicius3516/terraform-bootstrap/.github/workflows/bootstrap.yml@main
-        with:
-            environment: ${{ needs.resolve-env.outputs.resolved_env }}
-            region: ${{ vars.AWS_REGION }}
-        secrets:
-            AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-            AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-            ACCOUNT_ID: ${{ secrets.ACCOUNT_ID }}
             
 
     build-ami:
@@ -89,7 +77,7 @@ jobs:
     infra:
         runs-on: ubuntu-latest
         if: github.event_name != 'workflow_dispatch'
-        needs: [remote-backend, build-ami]
+        needs: [build-ami]
         steps:
             - name: Checkout code
               uses: actions/checkout@v4
@@ -125,7 +113,9 @@ jobs:
                   -var "aws_region=${{ secrets.AWS_REGION }}" \
                   -var "ami_id=${{ needs.build-ami.outputs.ami_id }}" \
                   -var "environment=${{ needs.resolve-env.outputs.resolved_env }}" \
-                  -var-file=infra/environments/${{ needs.resolve-env.outputs.resolved_env }}/terraform.tfvars"
+                  -var-file=infra/environments/${{ needs.resolve-env.outputs.resolved_env }}/terraform.tfvars" \
+                  -var "bucket_name=tf-state-${{ needs.resolve-env.outputs.resolved_env }}-${{ github.sha }}" \
+                  -var "dynamodb_name=tf-locks-${{ needs.resolve-env.outputs.resolved_env }}-${{ github.sha }}"
 
             - name: Terraform Apply
               run: terraform apply -auto-approve plan.out

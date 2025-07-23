@@ -1,3 +1,12 @@
+# Backend remotor S3
+terraform {
+  backend "s3" {
+    bucket = var.bucket_name
+    key    = "envs/staging/terraform.tfstate"
+    region = var.aws_region
+  }
+}
+
 module "vpc" {
   source = "git::https://github.com/Vinicius-DevOps/terraform-modules.git//modules/vpc?ref=main"
 
@@ -22,10 +31,11 @@ module "alb" {
 
 module "asg" {
   source                 = "git::https://github.com/Vinicius-DevOps/terraform-modules.git//modules/autoscaling-group?ref=main"
-  name                   = "${var.environment}"
+  name                   = var.environment
   ami_id                 = var.ami_id
   instance_type          = var.instance_type
   vpc_security_group_ids = [module.sg.security_group_id]
   subnet_ids             = [module.vpc.private_subnet_ids[0], module.vpc.private_subnet_ids[1]]
   target_group_arns      = [module.alb.target_group_arn]
+  environment            = var.environment
 }

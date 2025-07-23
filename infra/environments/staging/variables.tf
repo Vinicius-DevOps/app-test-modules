@@ -34,3 +34,11 @@ variable "tags" {
   description = "Tags for the resources."
   type        = map(string)
 }
+variable "bucket_name" {
+  description = "Name for the S3 bucket."
+  type = string
+}
+variable "dynamodb_name" {
+  description = "Name for the DynamoDB table."
+  type = string
+}
