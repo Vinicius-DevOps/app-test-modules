@@ -46,15 +46,18 @@ build {
   }
 
   provisioner "file" {
-    source      = "${path.root}/../app"
-    destination = "/opt/app"
+  source      = "${path.root}/../app"
+  destination = "/tmp/app"
   }
 
   provisioner "shell" {
     inline = [
+      "sudo mkdir -p /opt/app",
+      "sudo mv /tmp/app/* /opt/app/",
       "cd /opt/app",
       "sudo docker-compose build",
       "sudo docker-compose up -d"
     ]
   }
+
 }

@@ -36,6 +36,7 @@ jobs:
 
     build-ami:
         runs-on: ubuntu-latest
+        if: github.event_name != 'push'
         needs: resolve-env
         outputs:
             ami_id: ${{ steps.packer_build.outputs.ami_id }}
@@ -86,6 +87,7 @@ jobs:
 
     infra:
         runs-on: ubuntu-latest
+        if: github.event_name != 'push'
         needs: [remote-backend, build-ami]
         steps:
             - name: Checkout code
@@ -163,7 +165,7 @@ jobs:
           run: |
             terraform destroy -auto-approve \
               -var "aws_region=${{ secrets.AWS_REGION }}" \
-              -var "ami_id=ami-to-delete" \
+              -var "ami_id=${{ needs.build-ami.outputs.ami_id }}" \
               -var "environment=${{ needs.resolve-env.outputs.resolved_env }}" \
               -var-file=infra/environments/${{ needs.resolve-env.outputs.resolved_env }}/terraform.tfvars
 
