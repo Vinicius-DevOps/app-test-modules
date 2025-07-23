@@ -23,6 +23,7 @@ jobs:
                 fi
 
     remote-backend:
+        if: github.event_name != 'workflow_dispatch'
         needs: resolve-env
         uses: vinicius3516/terraform-bootstrap/.github/workflows/bootstrap.yml@main
         with:
@@ -36,7 +37,7 @@ jobs:
 
     build-ami:
         runs-on: ubuntu-latest
-        if: github.event_name != 'push'
+        if: github.event_name != 'workflow_dispatch'
         needs: resolve-env
         outputs:
             ami_id: ${{ steps.packer_build.outputs.ami_id }}
@@ -87,7 +88,7 @@ jobs:
 
     infra:
         runs-on: ubuntu-latest
-        if: github.event_name != 'push'
+        if: github.event_name != 'workflow_dispatch'
         needs: [remote-backend, build-ami]
         steps:
             - name: Checkout code
