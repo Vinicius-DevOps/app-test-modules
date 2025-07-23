@@ -46,7 +46,7 @@ build {
   }
 
   provisioner "file" {
-    source      = "../app"
+    source      = "${path.root}/../app"
     destination = "/opt/app"
   }
 

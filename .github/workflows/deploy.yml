@@ -58,6 +58,7 @@ jobs:
                 packer init ./packer/app.pkr.hcl
 
             - name: Run Packer Validate
+              working-directory: ./packer
               run: |
                 packer validate \
                   -var "environment=${{ needs.resolve-env.outputs.resolved_env }}" \
@@ -66,6 +67,7 @@ jobs:
 
 
             - name: Run Packer Build
+              working-directory: ./packer
               id: packer_build
               run: |
                 packer build -machine-readable -color=false \
