@@ -5,6 +5,10 @@ on:
         branches:
             - main
             - staging
+    workflow_dispatch:
+
+env:
+    REGION: ${{ secrets.AWS_REGION }}
 
 jobs:
     resolve-env:
@@ -26,7 +30,7 @@ jobs:
         uses: vinicius3516/terraform-bootstrap/.github/workflows/bootstrap.yml@main
         with:
             environment: ${{ needs.resolve-env.outputs.resolved_env }}
-            region: "us-east-1"
+            region: $REGION
         secrets:
             AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
             AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
