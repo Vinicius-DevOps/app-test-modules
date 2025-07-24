@@ -36,9 +36,9 @@ variable "tags" {
 }
 variable "bucket_name" {
   description = "Name for the S3 bucket."
-  type = string
+  type        = string
 }
 variable "dynamodb_name" {
   description = "Name for the DynamoDB table."
-  type = string
+  type        = string
 }

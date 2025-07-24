@@ -1,12 +1,3 @@
-# Backend remotor S3
-terraform {
-  backend "s3" {
-    bucket = var.bucket_name
-    key    = "envs/${var.environment}/terraform.tfstate"
-    region = var.aws_region
-  }
-}
-
 module "vpc" {
   source = "git::https://github.com/Vinicius-DevOps/terraform-modules.git//modules/vpc?ref=main"
 
