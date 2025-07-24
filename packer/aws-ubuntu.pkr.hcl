@@ -89,7 +89,7 @@ build {
     "cd /opt/app",
     "ls -la",
     "sudo docker compose version",
-    "sudo docker compose up -d --build"
+    "sudo docker compose -f /opt/app/docker-compose.yml up -d --build"
     ]
   }
 }
