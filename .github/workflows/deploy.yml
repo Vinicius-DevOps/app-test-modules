@@ -63,13 +63,13 @@ jobs:
                   -var "aws_region=${{ secrets.AWS_REGION }}" \
                   ./packer/app.pkr.hcl | tee packer.log
 
-                ami_id=$(grep -Eo 'artifact,0,id,ami-[a-zA-Z0-9]+' packer.log | cut -d, -f4 | tail -n1)
-
-                if [ -z "$ami_id" ]; then
-                  echo "Erro: AMI ID não encontrado"
+                if ! grep -q 'artifact,0,id,ami-' packer.log; then
+                  echo "Erro: Nenhuma AMI foi criada pelo Packer."
+                  cat packer.log
                   exit 1
                 fi
 
+                ami_id=$(grep -Eo 'artifact,0,id,ami-[a-zA-Z0-9]+' packer.log | cut -d, -f4 | tail -n1)
                 echo "ami_id=$ami_id" >> $GITHUB_OUTPUT
 
 
