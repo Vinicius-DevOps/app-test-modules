@@ -19,7 +19,7 @@ variable "environment" {
 
 variable "ami_name" {
   type    = string
-  default = "learn-packer-linux-aws-redis-msg"
+  default = "learn-packer-linux-aws-redis-msg-vinny"
 }
 
 source "amazon-ebs" "ubuntu" {
@@ -72,17 +72,23 @@ build {
     ]
   }
 
+  provisioner "shell" {
+  inline = [
+    "sudo mkdir -p /opt/app"
+    ]
+  }
+
   provisioner "file" {
-    source      = "../app"
-    destination = "/tmp/app"
+    source      = "./app/"
+    destination = "/opt/app/"
   }
 
   provisioner "shell" {
-    inline = [
-      "sudo mkdir -p /opt/app",
-      "sudo mv /tmp/app/* /opt/app/",
-      "cd /opt/app",
-      "sudo docker compose up -d --build"
+  inline = [
+    "cd /opt/app",
+    "ls -la",
+    "sudo docker compose version",
+    "sudo docker compose up -d --build"
     ]
   }
 }
