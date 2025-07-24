@@ -45,31 +45,34 @@ jobs:
 
             - name: Run Packer Init
               run: |
-                packer init ./packer/app.pkr.hcl
+                packer init ./packer/aws-ubuntu.pkr.hcl
 
             - name: Run Packer Validate
               run: |
                 packer validate \
                   -var "environment=${{ needs.resolve-env.outputs.resolved_env }}" \
                   -var "aws_region=${{ secrets.AWS_REGION }}" \
-                  ./packer/app.pkr.hcl
-
+                  ./packer/aws-ubuntu.pkr.hcl
 
             - name: Run Packer Build
               id: packer_build
               run: |
+                TIMESTAMP=$(date +%Y%m%d-%H%M%S)
                 packer build -machine-readable -color=false \
                   -var "environment=${{ needs.resolve-env.outputs.resolved_env }}" \
                   -var "aws_region=${{ secrets.AWS_REGION }}" \
-                  ./packer/app.pkr.hcl | tee packer.log
+                  -var "ami_name=learn-packer-linux-aws-redis-msg-${TIMESTAMP}" \
+                  ./packer/aws-ubuntu.pkr.hcl | tee packer.log
 
-                if ! grep -q 'artifact,0,id,ami-' packer.log; then
+                if ! grep -q 'artifact,0,id' packer.log; then
                   echo "Erro: Nenhuma AMI foi criada pelo Packer."
                   cat packer.log
                   exit 1
                 fi
 
-                ami_id=$(grep -Eo 'artifact,0,id,ami-[a-zA-Z0-9]+' packer.log | cut -d, -f4 | tail -n1)
+                # Extrai o AMI ID do formato: us-east-1:ami-05b538971c43f6344
+                ami_id=$(grep 'artifact,0,id' packer.log | cut -d, -f4 | cut -d: -f2)
+                echo "AMI criada: $ami_id"
                 echo "ami_id=$ami_id" >> $GITHUB_OUTPUT
 
 
@@ -77,7 +80,7 @@ jobs:
     infra:
         runs-on: ubuntu-latest
         if: github.event_name != 'workflow_dispatch'
-        needs: [build-ami]
+        needs: [resolve-env, build-ami]
         steps:
             - name: Checkout code
               uses: actions/checkout@v4
@@ -93,6 +96,7 @@ jobs:
               uses: hashicorp/setup-terraform@v2
 
             - name: Initialize Terraform
+              working-directory: ./infra
               run: |
                 terraform init \
                     -backend-config="bucket=${{ secrets.AWS_S3_BUCKET_NAME }}" \
@@ -102,28 +106,33 @@ jobs:
                     -backend-config="encrypt=true"
 
             - name: Terraform Format
+              working-directory: ./infra
               run: terraform fmt -check
 
             - name: Terraform Validate
+              working-directory: ./infra
               run: terraform validate
 
             - name: Terraform Plan
+              working-directory: ./infra
               run: |
                 terraform plan -out=plan.out \
                   -var "aws_region=${{ secrets.AWS_REGION }}" \
                   -var "ami_id=${{ needs.build-ami.outputs.ami_id }}" \
                   -var "environment=${{ needs.resolve-env.outputs.resolved_env }}" \
-                  -var-file=infra/environments/${{ needs.resolve-env.outputs.resolved_env }}/terraform.tfvars" \
+                  -var-file="environments/${{ needs.resolve-env.outputs.resolved_env }}/terraform.tfvars" \
                   -var "bucket_name=${{ secrets.AWS_S3_BUCKET_NAME }}" \
                   -var "dynamodb_name=${{ secrets.AWS_DYNAMODB_TABLE_NAME }}"
 
             - name: Terraform Apply
+              working-directory: ./infra
               run: terraform apply -auto-approve plan.out
 
             - name: Force Instance Refresh
               run: |
                 aws autoscaling start-instance-refresh \
-                  --auto-scaling-group-name "${{ needs.resolve-env.outputs.resolved_env }}-asg"
+                  --auto-scaling-group-name "${{ needs.resolve-env.outputs.resolved_env }}-asg" \
+                  --region ${{ secrets.AWS_REGION }}
 
     destroy:
       runs-on: ubuntu-latest
@@ -144,6 +153,7 @@ jobs:
           uses: hashicorp/setup-terraform@v2
 
         - name: Terraform Init
+          working-directory: ./infra
           run: |
             terraform init \
               -backend-config="bucket=${{ secrets.AWS_S3_BUCKET_NAME }}" \
@@ -153,4 +163,12 @@ jobs:
               -backend-config="encrypt=true"
 
         - name: Terraform Destroy
-          run: terraform destroy -auto-approve
+          working-directory: ./infra
+          run: |
+            terraform destroy -auto-approve \
+              -var "aws_region=${{ secrets.AWS_REGION }}" \
+              -var "ami_id=ami-placeholder" \
+              -var "environment=${{ needs.resolve-env.outputs.resolved_env }}" \
+              -var-file="environments/${{ needs.resolve-env.outputs.resolved_env }}/terraform.tfvars" \
+              -var "bucket_name=${{ secrets.AWS_S3_BUCKET_NAME }}" \
+              -var "dynamodb_name=${{ secrets.AWS_DYNAMODB_TABLE_NAME }}"
