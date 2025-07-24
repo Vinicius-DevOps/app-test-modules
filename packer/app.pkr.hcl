@@ -13,7 +13,7 @@ variable "aws_region" {
 }
 
 variable "environment" {
-  type    = string
+  type = string
 }
 
 source "amazon-ebs" "docker_app" {
@@ -38,27 +38,33 @@ build {
   name    = "Build Docker AMI"
   sources = ["source.amazon-ebs.docker_app"]
 
-    provisioner "shell" {
+  # Instalação do Docker e Compose (com workaround do APT bug)
+  provisioner "shell" {
     inline = [
       "sudo rm -f /etc/apt/apt.conf.d/50command-not-found",
       "sudo apt-get update",
       "sudo apt-get install -y ca-certificates curl gnupg lsb-release",
+
       "sudo mkdir -p /etc/apt/keyrings",
       "curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg",
+
       "echo \"deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable\" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null",
+
       "sudo apt-get update",
       "sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin",
+
       "sudo systemctl enable docker",
       "sudo usermod -aG docker ubuntu"
     ]
   }
 
-
+  # Copia a aplicação para a AMI
   provisioner "file" {
     source      = "${path.root}/../app"
     destination = "/tmp/app"
   }
 
+  # Move app e sobe containers
   provisioner "shell" {
     inline = [
       "sudo mkdir -p /opt/app",
