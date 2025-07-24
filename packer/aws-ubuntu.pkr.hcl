@@ -74,7 +74,8 @@ build {
 
   provisioner "shell" {
   inline = [
-    "sudo mkdir -p /opt/app"
+    "sudo mkdir -p /opt/app",
+    "sudo chown -R ubuntu:ubuntu /opt/app"
     ]
   }
 
