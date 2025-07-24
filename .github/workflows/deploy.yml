@@ -27,6 +27,8 @@ jobs:
         runs-on: ubuntu-latest
         if: github.event_name != 'workflow_dispatch'
         needs: resolve-env
+        env:
+          PACKER_GITHUB_API_TOKEN: ${{ secrets.GTH_TOKEN }}
         outputs:
             ami_id: ${{ steps.packer_build.outputs.ami_id }}
         steps:
@@ -45,19 +47,13 @@ jobs:
 
             - name: Run Packer Init
               run: |
-                export PACKER_GITHUB_API_TOKEN=${{ secrets.GTH_TOKEN }}
                 packer init ./packer/aws-ubuntu.pkr.hcl
 
-            - name: Run Packer Validate
-              run: |
                 packer validate \
                   -var "environment=${{ needs.resolve-env.outputs.resolved_env }}" \
                   -var "aws_region=${{ secrets.AWS_REGION }}" \
                   ./packer/aws-ubuntu.pkr.hcl
 
-            - name: Run Packer Build
-              id: packer_build
-              run: |
                 TIMESTAMP=$(date +%Y%m%d-%H%M%S)
                 packer build -machine-readable -color=false \
                   -var "environment=${{ needs.resolve-env.outputs.resolved_env }}" \
