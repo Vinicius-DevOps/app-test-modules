@@ -38,8 +38,9 @@ build {
   name    = "Build Docker AMI"
   sources = ["source.amazon-ebs.docker_app"]
 
-  provisioner "shell" {
+    provisioner "shell" {
     inline = [
+      "sudo rm -f /etc/apt/apt.conf.d/50command-not-found",
       "sudo apt-get update",
       "sudo apt-get install -y ca-certificates curl gnupg lsb-release",
       "sudo mkdir -p /etc/apt/keyrings",
@@ -51,6 +52,7 @@ build {
       "sudo usermod -aG docker ubuntu"
     ]
   }
+
 
   provisioner "file" {
     source      = "${path.root}/../app"
