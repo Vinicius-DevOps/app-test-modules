@@ -2,7 +2,7 @@
 terraform {
   backend "s3" {
     bucket = var.bucket_name
-    key    = "envs/staging/terraform.tfstate"
+    key    = "envs/${var.environment}/terraform.tfstate"
     region = var.aws_region
   }
 }

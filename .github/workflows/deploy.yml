@@ -1,10 +1,10 @@
 name: Provisioner and Deploy
 
 on:
-    # push:
-    #     branches:
-    #         - main
-    #         - staging
+    push:
+        branches:
+            - main
+            - staging
     workflow_dispatch:
 
 jobs:
@@ -95,10 +95,10 @@ jobs:
             - name: Initialize Terraform
               run: |
                 terraform init \
-                    -backend-config="bucket=tf-state-${{ needs.resolve-env.outputs.resolved_env }}" \
+                    -backend-config="bucket=${{ secrets.AWS_S3_BUCKET_NAME }}" \
                     -backend-config="key=envs/${{ needs.resolve-env.outputs.resolved_env }}/terraform.tfstate" \
                     -backend-config="region=${{ secrets.AWS_REGION }}" \
-                    -backend-config="dynamodb_table=terraform-locks-${{ needs.resolve-env.outputs.resolved_env }}" \
+                    -backend-config="dynamodb_table=${{ secrets.AWS_DYNAMODB_TABLE_NAME }}" \
                     -backend-config="encrypt=true"
 
             - name: Terraform Format
@@ -114,8 +114,8 @@ jobs:
                   -var "ami_id=${{ needs.build-ami.outputs.ami_id }}" \
                   -var "environment=${{ needs.resolve-env.outputs.resolved_env }}" \
                   -var-file=infra/environments/${{ needs.resolve-env.outputs.resolved_env }}/terraform.tfvars" \
-                  -var "bucket_name=tf-state-${{ needs.resolve-env.outputs.resolved_env }}-${{ github.sha }}" \
-                  -var "dynamodb_name=tf-locks-${{ needs.resolve-env.outputs.resolved_env }}-${{ github.sha }}"
+                  -var "bucket_name=${{ secrets.AWS_S3_BUCKET_NAME }}" \
+                  -var "dynamodb_name=${{ secrets.AWS_DYNAMODB_TABLE_NAME }}"
 
             - name: Terraform Apply
               run: terraform apply -auto-approve plan.out
@@ -146,21 +146,11 @@ jobs:
         - name: Terraform Init
           run: |
             terraform init \
-              -backend-config="bucket=tf-state-${{ needs.resolve-env.outputs.resolved_env }}" \
+              -backend-config="bucket=${{ secrets.AWS_S3_BUCKET_NAME }}" \
               -backend-config="key=envs/${{ needs.resolve-env.outputs.resolved_env }}/terraform.tfstate" \
               -backend-config="region=${{ secrets.AWS_REGION }}" \
-              -backend-config="dynamodb_table=terraform-locks-${{ needs.resolve-env.outputs.resolved_env }}" \
+              -backend-config="dynamodb_table=${{ secrets.AWS_DYNAMODB_TABLE_NAME }}" \
               -backend-config="encrypt=true"
 
         - name: Terraform Destroy
-          run: |
-            terraform destroy -auto-approve \
-              -var "aws_region=${{ secrets.AWS_REGION }}" \
-              -var "ami_id=${{ needs.build-ami.outputs.ami_id }}" \
-              -var "environment=${{ needs.resolve-env.outputs.resolved_env }}" \
-              -var-file=infra/environments/${{ needs.resolve-env.outputs.resolved_env }}/terraform.tfvars
-
-        - name: Force Instance Refresh
-          run: |
-            aws autoscaling start-instance-refresh \
-              --auto-scaling-group-name "${{ needs.resolve-env.outputs.resolved_env }}-asg"
+          run: terraform destroy -auto-approve
