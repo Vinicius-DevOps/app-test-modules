@@ -45,6 +45,7 @@ jobs:
 
             - name: Run Packer Init
               run: |
+                export PACKER_GITHUB_API_TOKEN=${{ secrets.GTH_TOKEN }}
                 packer init ./packer/aws-ubuntu.pkr.hcl
 
             - name: Run Packer Validate
