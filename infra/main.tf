@@ -13,7 +13,7 @@ module "sg" {
 }
 
 module "alb" {
-  source              = "git::https://github.com/Vinicius-DevOps/terraform-aws-moduless.git//modules/alb?ref=main"
+  source              = "git::https://github.com/Vinicius-DevOps/terraform-aws-modules.git//modules/alb?ref=main"
   vpc_id              = module.vpc.vpc_id
   security_groups_ids = [module.sg.security_group_id]
   subnets_ids         = [module.vpc.public_subnet_ids[0], module.vpc.public_subnet_ids[1]]
