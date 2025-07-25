@@ -19,7 +19,7 @@ variable "environment" {
 
 variable "ami_name" {
   type    = string
-  default = "learn-packer-linux-aws-redis-msg-vinny"
+  default = "learn-packer-linux-aws-redis-msg"
 }
 
 source "amazon-ebs" "ubuntu" {

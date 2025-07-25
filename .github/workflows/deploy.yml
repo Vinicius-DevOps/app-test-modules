@@ -73,7 +73,7 @@ jobs:
                 fi
 
                 # Extrai o AMI ID do formato: us-east-1:ami-05b538971c43f6344
-                ami_id=$(grep 'artifact,0,id' packer.log | cut -d, -f4 | cut -d: -f2)
+                ami_id=$(grep 'artifact,0,id,${{ secrets.AWS_REGION}}' packer.log | cut -d, -f6 | cut -d: -f2)
                 echo "AMI criada: $ami_id"
                 echo "ami_id=$ami_id" >> $GITHUB_OUTPUT
 
