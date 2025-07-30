@@ -9,17 +9,17 @@ packer {
 
 variable "aws_region" {
   type    = string
-  default = "us-east-1"
+  default = ""
 }
 
 variable "environment" {
   type    = string
-  default = "staging"
+  default = ""
 }
 
 variable "ami_name" {
   type    = string
-  default = "learn-packer-linux-aws-redis-msg-vinny"
+  default = "learn-packer-linux-aws-redis-msg"
 }
 
 source "amazon-ebs" "ubuntu" {
@@ -39,7 +39,7 @@ source "amazon-ebs" "ubuntu" {
 }
 
 build {
-  name = var.ami_name
+  name    = var.ami_name
   sources = ["source.amazon-ebs.ubuntu"]
 
   provisioner "shell" {
@@ -73,9 +73,9 @@ build {
   }
 
   provisioner "shell" {
-  inline = [
-    "sudo mkdir -p /opt/app",
-    "sudo chown -R ubuntu:ubuntu /opt/app"
+    inline = [
+      "sudo mkdir -p /opt/app",
+      "sudo chown -R ubuntu:ubuntu /opt/app"
     ]
   }
 
@@ -85,11 +85,40 @@ build {
   }
 
   provisioner "shell" {
-  inline = [
-    "cd /opt/app",
-    "ls -la",
-    "sudo docker compose version",
-    "sudo docker compose -f /opt/app/docker-compose.yml up -d --build"
+    inline = [
+      "cd /opt/app",
+      "ls -la",
+      "sudo docker compose version",
+      "sudo docker compose -f /opt/app/docker-compose.yml up -d --build"
+    ]
+  }
+
+  provisioner "file" {
+    content     = <<EOF
+[Unit]
+Description=Start Docker Compose App
+After=network.target docker.service
+Requires=docker.service
+
+[Service]
+Type=exec
+Restart=always
+WorkingDirectory=/opt/app
+ExecStart=/usr/bin/env docker compose up -d
+ExecStop=/usr/bin/env docker compose down
+RemainAfterExit=true
+
+[Install]
+WantedBy=multi-user.target
+EOF
+    destination = "/tmp/myapp.service"
+  }
+
+  provisioner "shell" {
+    inline = [
+      "sudo mv /tmp/myapp.service /etc/systemd/system/myapp.service",
+      "sudo systemctl daemon-reload",
+      "sudo systemctl enable myapp.service"
     ]
   }
 }

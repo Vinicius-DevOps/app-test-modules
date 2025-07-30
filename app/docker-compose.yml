@@ -4,11 +4,21 @@ services:
       context: .
       dockerfile: Dockerfile
     ports:
-      - "5000:5000"
+      - "80:5000"
     environment:
       - REDIS_HOST=redis
     depends_on:
       - redis
+    networks:
+      - lab-networks
 
   redis:
     image: "redis:alpine"
+    ports:
+      - "6379:6379"
+    networks:
+      - lab-networks
+
+networks:
+  lab-networks:
+    driver: bridge

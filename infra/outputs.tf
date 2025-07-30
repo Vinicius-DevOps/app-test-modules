@@ -1,4 +1,4 @@
-output "aws_caller_identity" {
-  description = "AWS caller identity."
-  value = data.aws_caller_identity.current.account_id
+# ALB DNS Name
+output "alb_dns_name" {
+  value = module.alb.dns_name
 }

@@ -13,11 +13,10 @@ on:
 
 jobs:
     deploy:
-        uses: vinicius3516/terraform-bootstrap/.github/workflows/bootstrap.yml@main
+        uses: Vinicius-DevOps/bootstrap/.github/workflows/bootstrap.yml@main
         with:
             environment: ${{ github.event.inputs.environment }}
             region: ${{ vars.AWS_REGION }}
-            github_run_number: ${{ github.run_number }}
         secrets:
             AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
             AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}

@@ -1,8 +1,15 @@
+# VPC
 vpc_cidr_block       = "10.0.0.0/16"
-public_subnet_cidrs  = ["10.1.1.0/24", "10.1.2.0/24"]
-private_subnet_cidrs = ["10.1.101.0/24", "10.1.102.0/24"]
-name                 = "app-test"
-instance_type        = "t2.micro"
-tags = {
-  "Environment" = "staging"
-}
+environment          = "staging"
+public_subnet_cidrs  = ["10.0.1.0/24", "10.0.2.0/24"]
+private_subnet_cidrs = ["10.0.101.0/24", "10.0.102.0/24"]
+
+# Lauch Template
+ami_id        = "ami-086fca64d94880662"
+instance_type = "t2.micro"
+key_name      = "key-par"
+
+# Auto Scaling Group
+min_size         = 1
+max_size         = 3
+desired_capacity = 1
