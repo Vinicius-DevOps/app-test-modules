@@ -126,8 +126,7 @@ jobs:
                   -var "aws_region=${{ secrets.AWS_REGION }}" \
                   -var "ami_id=${{ needs.build-ami.outputs.ami_id }}" \
                   -var "environment=${{ needs.resolve-env.outputs.resolved_env }}" \
-                  -var-file="environments/${{ needs.resolve-env.outputs.resolved_env }}/terraform.tfvars" \
-                  -var "bucket_name=${{ secrets.AWS_S3_BUCKET_NAME }}"
+                  -var-file="environments/${{ needs.resolve-env.outputs.resolved_env }}/terraform.tfvars"
 
             - name: Terraform Apply
               working-directory: ./infra
