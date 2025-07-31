@@ -10,6 +10,14 @@ on:
             ami_id:
                 description: "ID da AMI"
                 required: true
+            environment:
+                description: The environment to deploy
+                type: choice
+                required: true
+                options:
+                    - prod
+                    - staging
+
 
 jobs:
     resolve-env:
@@ -126,8 +134,7 @@ jobs:
                   -var "aws_region=${{ secrets.AWS_REGION }}" \
                   -var "ami_id=${{ needs.build-ami.outputs.ami_id }}" \
                   -var "environment=${{ needs.resolve-env.outputs.resolved_env }}" \
-                  -var-file="environments/${{ needs.resolve-env.outputs.resolved_env }}/terraform.tfvars" \
-                  -var "bucket_name=${{ secrets.AWS_S3_BUCKET_NAME }}"
+                  -var-file="environments/${{ needs.resolve-env.outputs.resolved_env }}/terraform.tfvars"
 
             - name: Terraform Apply
               working-directory: ./infra
@@ -162,7 +169,7 @@ jobs:
           run: |
             terraform init \
                   -backend-config="bucket=${{ secrets.AWS_S3_BUCKET_NAME }}" \
-                  -backend-config="key=envs/${{ needs.resolve-env.outputs.resolved_env }}/terraform.tfstate" \
+                  -backend-config="key=envs/${{ github.event.inputs.environment }}/terraform.tfstate" \
                   -backend-config="region=${{ secrets.AWS_REGION }}" \
                   -backend-config="encrypt=true" \
                   -backend-config="use_lockfile=true"
@@ -172,7 +179,7 @@ jobs:
           run: |
             terraform destroy -auto-approve \
               -var "aws_region=${{ secrets.AWS_REGION }}" \
-              -var "environment=${{ needs.resolve-env.outputs.resolved_env }}" \
+              -var "environment=${{ github.event.inputs.environment }}" \
               -var "ami_id=${{ github.event.inputs.ami_id }}" \
-              -var-file="environments/${{ needs.resolve-env.outputs.resolved_env }}/terraform.tfvars" \
+              -var-file="environments/${{ github.event.inputs.environment }}/terraform.tfvars" \
               -var "bucket_name=${{ secrets.AWS_S3_BUCKET_NAME }}"
