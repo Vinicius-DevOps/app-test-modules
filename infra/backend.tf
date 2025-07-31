@@ -9,11 +9,11 @@ terraform {
   }
 
   backend "s3" {
-    bucket         = "placeholder"
-    key            = "placeholder"
-    region         = "placeholder"
-    encrypt        = true
-    use_lockfile   = true
+    bucket       = "placeholder"
+    key          = "placeholder"
+    region       = "placeholder"
+    encrypt      = true
+    use_lockfile = true
   }
 }
 
